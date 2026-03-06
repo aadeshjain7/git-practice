@@ -1,4 +1,5 @@
 #routing config:
+spring:
   cloud:
     gateway:
       routes:
