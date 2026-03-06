@@ -1,1 +1,46 @@
 helloMsg: "Hello how you doing my Friend"
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  retry:
+#    to create default config so can be used with multiple instances
+    configs:
+      default:
+        # max retry attempts for one api call and if not succeed call fallback method
+        maxRetryAttempts: 3
+        # time between retry attempts if service up between this time give response if not fail and give fallback
+        waitDuration: 100ms
+    instances:
+      inventoryRetry:
+        baseConfig: default
+#        Even can override base config
+        waitDuration: 100ms
+  ratelimiter:
+    instances:
+      inventoryRatelimiter:
+# max calls api calls allowed in given specific time if exceeds call fallback method
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeDurationPeriod: 10ms
+  circuitbreaker:
+    instances:
+      inventoryCircuitBreaker:
+        registerHealthIndicator: true  # Expose circuit breaker health via the actuator
+        slidingWindowSize: 10          # Size of the sliding window for call recording
+        slidingWindowType: COUNT_BASED # Use count-based sliding window
+        minimumNumberOfCalls: 10       # Minimum number of calls before calculating failure rate
+        failureRateThreshold: 50       # If 50% (5 out of 10) calls fail, the circuit goes to OPEN state
+        waitDurationInOpenState: 1s   # Time the circuit stays OPEN before moving to HALF_OPEN
+        permittedNumberOfCallsInHalfOpenState: 5  # Number of test calls in HALF_OPEN state
+        automatic-transition-from-open-to-half-open-enabled: true
+        eventConsumerBufferSize: 10   # Buffer size for event logs
